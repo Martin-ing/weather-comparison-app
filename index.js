@@ -1,34 +1,35 @@
 const form = document.getElementById("weatherForm");
 const resultDiv = document.getElementById("weatherResult");
 
-form.addEventListener("submit", async (event) => {
+form.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  const city = document.getElementById("cityInput").value.trim();
+  const cityInput = document.getElementById("cityInput").value.trim();
   resultDiv.innerHTML = "";
 
-  try {
-    const apiKey = "d49f768bd5ea4f249972455f214cadfe";
-    const cities = city.split(",").map(city => city.trim());
+  if (!cityInput) {
+    resultDiv.innerHTML =
+      '<div class="alert alert-danger">Ingrese una ciudad!</div>';
+    return;
+  }
 
-    if (cities.length === 0) {
-      resultDiv.innerHTML = '<div class="alert alert-danger">Invalid input!</div>';
-      return;
-    }
+  const apiKey = "d49f768bd5ea4f249972455f214cadfe";
+  const cities = cityInput.split(",").map(city => city.trim()).filter(city => city !== "");
+  if (cities.length === 0) {
+    resultDiv.innerHTML = '<div class="alert alert-danger">Invalid input!</div>';
+    return;
+  }
 
-    for (const city of cities) {
-  
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`
-        );
-  
+  const fetchPromises = cities.map(city => {
+    return fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`)
+      .then(response => {
         if (!response.ok) {
-          throw new Error(`City "${city}" not found`);
+          throw new Error(`No se encontró la ciudad: "${city}"`);
         }
-  
-        const data = await response.json();
-  
-        resultDiv.innerHTML += `
+        return response.json();
+      })
+      .then(data => {
+        return `
           <div class="card result-card p-3 mb-3">
             <div class="card-body text-center">
               <h5 class="card-title">${data.name}, ${data.sys.country} <i class="fas fa-map-marker-alt text-info"></i></h5>
@@ -38,10 +39,15 @@ form.addEventListener("submit", async (event) => {
             </div>
           </div>
         `;
-    }
-  }
-  catch (error) {
-    resultDiv.innerHTML += `<div class="alert alert-danger">${error.message}</div>`;
-  }
-}
-);
+      })
+      .catch(error => `<div class="alert alert-danger">${error.message}</div>`);
+  });
+
+  Promise.all(fetchPromises)
+    .then(results => {
+      resultDiv.innerHTML = results.join("");
+    })
+    .catch(error => {
+      resultDiv.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+    });
+});
