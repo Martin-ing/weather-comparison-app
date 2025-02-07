@@ -14,7 +14,6 @@
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-
   <body>
     <div class="container">
       <div class="card weather-card p-4">
@@ -37,8 +36,15 @@
         </form>
 
         <div id="weatherResult" class="mt-4"></div>
+        
+        <div id="chartContainer" class="mt-4">
+          <canvas id="weatherChart"></canvas>
+        </div>
       </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script src="./index.js"></script>
   </body>
 </html>
